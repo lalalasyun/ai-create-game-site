@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --foreground-rgb: 0, 0, 0;
+    --background-rgb: 245, 245, 245;
+  }
+
+  body {
+    color: rgb(var(--foreground-rgb));
+    background: rgb(var(--background-rgb));
+    font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "メイリオ", Meiryo, sans-serif;
+  }
+
+  ::selection {
+    background-color: rgb(37 99 235 / 0.2);
+  }
+}
+
+@layer components {
+  .container-width {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .article-card {
+    @apply bg-white rounded-lg shadow-sm overflow-hidden transition-transform hover:-translate-y-1;
+  }
+
+  .tag {
+    @apply px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors;
+  }
+
+  .nav-link {
+    @apply text-gray-700 hover:text-blue-600 font-medium relative;
+  }
+
+  .nav-link::after {
+    @apply content-[''] absolute bottom-0 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300;
+  }
+
+  .nav-link:hover::after {
+    @apply w-full;
+  }
+
+  .ranking-item {
+    @apply flex items-center py-3 border-b last:border-b-0;
+  }
+
+  .ranking-number {
+    @apply w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm mr-2;
+  }
+}
