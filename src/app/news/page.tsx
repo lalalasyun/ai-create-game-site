@@ -1,48 +1,56 @@
-import ArticleCard from '@/components/ArticleCard';
+import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
+import ArticleCard from '@/components/ArticleCard';
+import { getPublishedArticles } from '@/lib/db/queries/articles';
+import { ArticlesTable } from '@/lib/db/schema';
 
-const newsArticles = [
-  {
-    title: 'FF7 リバース アップデート情報',
-    excerpt: '最新パッチで追加された新コンテンツと修正内容をまとめて解説。新たな装備とミニゲームが追加されました。',
-    date: '2024.03.21',
-    link: '/games/ff7/news/update',
-    thumbnail: 'https://placehold.co/600x400',
-  },
-  {
-    title: 'ゼルダの伝説 次回DLCの情報公開',
-    excerpt: '新たなダンジョンと装備の追加が決定。リンクの新能力も登場予定です。',
-    date: '2024.03.20',
-    link: '/games/zelda/news/dlc',
-    thumbnail: 'https://placehold.co/600x400',
-  },
-  {
-    title: 'ドラクエモンスターズ3 最新イベント情報',
-    excerpt: '期間限定の特別モンスターが登場。レアな配合素材もゲットできるチャンス！',
-    date: '2024.03.19',
-    link: '/games/dragon-quest/news/event',
-    thumbnail: 'https://placehold.co/600x400',
-  },
-];
-
-export default function NewsPage() {
+export default async function NewsPage() {
+  // SQLiteから公開済み記事を取得
+  const articles = await getPublishedArticles(20);
+  
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr,300px] gap-8">
-      <main>
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">最新攻略情報</h1>
-        <div className="grid gap-6 sm:grid-cols-2">
-          {newsArticles.map((article) => (
-            <ArticleCard
-              key={article.link}
-              title={article.title}
-              excerpt={article.excerpt}
-              date={article.date}
-              link={article.link}
-              thumbnail={article.thumbnail}
-            />
-          ))}
-        </div>
-      </main>
+    <div className="grid md:grid-cols-3 gap-8">
+      <div className="md:col-span-2">
+        <h1 className="text-3xl font-bold mb-8">最新ニュース・攻略記事</h1>
+        
+        {articles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {articles.map((article) => {
+              // 日付の処理を関数内で行う
+              const formattedDate = (() => {
+                if (!article.publishedAt) return '';
+                try {
+                  // publishedAtが文字列の場合
+                  if (typeof article.publishedAt === 'string') {
+                    return new Date(article.publishedAt).toLocaleDateString('ja-JP');
+                  }
+                  // その他の場合（ColumnTypeオブジェクトなど）
+                  return new Date(String(article.publishedAt)).toLocaleDateString('ja-JP');
+                } catch (e) {
+                  console.error('日付の変換に失敗:', e);
+                  return '';
+                }
+              })();
+              
+              return (
+                <ArticleCard 
+                  key={typeof article.id === 'object' ? String(article.id) : article.id}
+                  title={article.title}
+                  excerpt={article.content.substring(0, 120) + '...'}
+                  slug={article.slug}
+                  gameSlug={article.gameSlug || ''}
+                  publishDate={formattedDate}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+            <p className="text-gray-500">記事がまだ公開されていません</p>
+          </div>
+        )}
+      </div>
+      
       <Sidebar />
     </div>
   );
