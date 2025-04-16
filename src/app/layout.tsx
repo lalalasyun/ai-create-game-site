@@ -5,7 +5,19 @@ import Footer from '@/components/Footer';
 import { ensureDatabaseSetup } from '@/lib/db/setup';
 
 // データベース初期化を非同期で実行
-ensureDatabaseSetup().catch(console.error);
+// サーバーコンポーネントで非同期関数を呼び出すためのハック
+const dbSetup = async () => {
+  try {
+    await ensureDatabaseSetup();
+  } catch (err) {
+    console.error('データベースのセットアップに失敗しました:', err);
+  }
+};
+
+// このブロックはサーバーサイドでのみ実行される
+if (typeof window === 'undefined') {
+  dbSetup();
+}
 
 export const metadata: Metadata = {
   title: 'ゲーム攻略.com',

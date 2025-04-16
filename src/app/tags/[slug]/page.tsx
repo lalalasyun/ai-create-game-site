@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { getTagBySlug } from '@/lib/db/queries/tags';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/index';
+import { ArticlesTable } from '@/lib/db/schema';
 
 // タグに関連する記事を取得する関数
 async function getArticlesByTag(tagSlug: string) {
@@ -54,24 +55,45 @@ export default async function TagPage({ params }: { params: { slug: string } }) 
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-bold mb-6">関連記事 ({articles.length}件)</h2>
             <ul className="divide-y">
-              {articles.map((article) => (
-                <li key={article.id} className="py-4 first:pt-0 last:pb-0">
-                  <Link
-                    href={`/games/${article.gameSlug}/guide/${article.slug}`}
-                    className="block hover:bg-gray-50 p-2 -mx-2 rounded transition-colors"
+              {articles.map((article) => {
+                // 日付処理の改善
+                const formattedDate = (() => {
+                  if (!article.publishedAt) return '';
+                  try {
+                    // publishedAtが文字列の場合
+                    if (typeof article.publishedAt === 'string') {
+                      return new Date(article.publishedAt).toLocaleDateString('ja-JP');
+                    }
+                    // その他の場合（ColumnTypeオブジェクトなど）
+                    return new Date(String(article.publishedAt)).toLocaleDateString('ja-JP');
+                  } catch (e) {
+                    console.error('日付の変換に失敗:', e);
+                    return '';
+                  }
+                })();
+
+                return (
+                  <li 
+                    key={typeof article.id === 'object' ? String(article.id) : article.id} 
+                    className="py-4 first:pt-0 last:pb-0"
                   >
-                    <h3 className="font-bold text-lg mb-1 hover:text-blue-600 transition-colors">
-                      {article.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {article.publishedAt && new Date(article.publishedAt).toLocaleDateString('ja-JP')}
-                    </p>
-                    <p className="text-gray-700">
-                      {article.content.substring(0, 120)}...
-                    </p>
-                  </Link>
-                </li>
-              ))}
+                    <Link
+                      href={`/games/${article.gameSlug}/guide/${article.slug}`}
+                      className="block hover:bg-gray-50 p-2 -mx-2 rounded transition-colors"
+                    >
+                      <h3 className="font-bold text-lg mb-1 hover:text-blue-600 transition-colors">
+                        {article.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {formattedDate && `${formattedDate}`}
+                      </p>
+                      <p className="text-gray-700">
+                        {article.content.substring(0, 120)}...
+                      </p>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ) : (

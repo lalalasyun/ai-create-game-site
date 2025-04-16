@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { getAllGames } from '@/lib/db/queries/games';
+import { GamesTable } from '@/lib/db/schema';
 
 export default async function GamesPage() {
   // SQLiteから全てのゲーム情報を取得
@@ -14,33 +15,45 @@ export default async function GamesPage() {
         
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {games.map((game) => (
-              <Link 
-                href={`/games/${game.slug}`} 
-                key={game.id}
-                className="group block"
-              >
-                <div className="relative h-48 overflow-hidden rounded-lg mb-2">
-                  {game.imageUrl ? (
-                    <Image 
-                      src={game.imageUrl} 
-                      alt={game.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-gray-400">画像なし</span>
-                    </div>
-                  )}
-                </div>
-                <h3 className="font-bold text-lg group-hover:text-blue-600 transition-colors">
-                  {game.title}
-                </h3>
-                <p className="text-sm text-gray-500">{game.publisher} | {game.platform}</p>
-                <p className="text-sm text-gray-500">発売日: {new Date(game.releaseDate).toLocaleDateString('ja-JP')}</p>
-              </Link>
-            ))}
+            {games.map((game) => {
+              // 日付処理の改善
+              const formattedDate = (() => {
+                try {
+                  return new Date(game.releaseDate).toLocaleDateString('ja-JP');
+                } catch (e) {
+                  console.error('日付の変換に失敗:', e);
+                  return game.releaseDate || '日付なし';
+                }
+              })();
+
+              return (
+                <Link 
+                  href={`/games/${game.slug}`} 
+                  key={typeof game.id === 'object' ? String(game.id) : game.id}
+                  className="group block"
+                >
+                  <div className="relative h-48 overflow-hidden rounded-lg mb-2">
+                    {game.imageUrl ? (
+                      <Image 
+                        src={game.imageUrl} 
+                        alt={game.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-400">画像なし</span>
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="font-bold text-lg group-hover:text-blue-600 transition-colors">
+                    {game.title}
+                  </h3>
+                  <p className="text-sm text-gray-500">{game.publisher} | {game.platform}</p>
+                  <p className="text-sm text-gray-500">発売日: {formattedDate}</p>
+                </Link>
+              );
+            })}
           </div>
           
           {games.length === 0 && (
